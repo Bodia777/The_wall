@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Wall</title>
+  <link rel="stylesheet" href="bootstrap-4.4.1-dist/css/bootstrap.css">
+  <style>
+    small {
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" style="margin-top: 30px">
+    <div style="background-color: green; padding: 30px; padding-left: 10vw">
+      <form name="submitForm" onchange="disabledButtonChecker()">
+        <div class="form-group row">
+          <label for="wallsHeightAndWidth" class="col-sm-8 col-form-label"><small>Please type width and height of the
+              wall</small></label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" name="wallsHeightAndWidth" id="wallsHeightAndWidth"
+              placeholder="two positive integers separated by space" pattern="^([0-9]+)(\s)([0-9]+)$" required
+              onchange="validationChecker(event, /^([1-9][0-9]*)(\s)([1-9][0-9]*)$/, 'wallsHeightAndWidthChecker')">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="wallsShapeMatrix" class="col-sm-8 col-form-label"><small>Please type wall's shape
+              matrix</small></label>
+          <div class="col-sm-10">
+            <textarea class="form-control" name="wallsShapeMatrix" id="wallsShapeMatrix"
+              placeholder="formed just '1'(present brick) and '0' (absent brick) symbols with every string on its own line"
+              onchange="validationChecker(event, /^[0-1\n]+$/, 'wallsShapeMatrixChecker')" required></textarea>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="countOfBrickSorts" class="col-sm-8 col-form-label"><small>Please type the count of brick's
+              sorts</small></label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="countOfBrickSorts" name="countOfBrickSorts"
+              placeholder="the positive integer" onchange="validationChecker(event, /^[1-9][0-9]*$/, 'countOfBrickSortsChecker')" required>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="listOfBricks" class="col-sm-8 col-form-label"><small>Please type list of bricks</small></label>
+          <div class="col-sm-10">
+            <textarea class="form-control" id="listOfBricks" name="listOfBricks"
+              placeholder="Type lines according to sort of bricks. Each line containing three positive integers separated by space: width of brick, height of brick and count of bricks."
+              onchange="validationChecker(event, /^(([1-8])(\s)([1-8])(\s)([1-9][0-9]*)(\n)*)+$/, 'listOfbricksChecker')"></textarea>
+          </div>
+        </div>
+        <input type="button" name="button" class="btn btn-primary col-sm-10" value="Send request" disabled
+          onclick="onSubmit()">
+        <div class="form-group row answerChecker" style="display: none">
+          <label for="answer" class="col-sm-8 col-form-label"><small>Answer</small></label>
+          <div class="col-sm-10">
+            <input type="text" readonly class="form-control" name="answer" id="answer">
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+
+<script type="text/javascript">
+  const getElementAccess = (selector) => document.querySelector(selector);
+  const form = document.forms['submitForm'];
+  let formValidation = {
+    listOfbricksChecker: false,
+    wallsShapeMatrixChecker: false,
+    wallsHeightAndWidthChecker: false,
+    countOfBrickSortsChecker: false,
+  };
+
+  function validationChecker(event, pattern, checker) {
+    switch (checker){
+      case 'listOfbricksChecker':
+        if (event.target.value.match(pattern) && event.target.value.split(/\n/).length === +form.countOfBrickSorts.value) {
+          event.target.style.border = '3px solid rgb(2, 39, 2)';
+          formValidation.listOfbricksChecker = true;
+        } else {
+          event.target.style.border = '3px solid red';
+          formValidation.listOfbricksChecker = false;
+        }
+      break;
+      case 'wallsShapeMatrixChecker':
+      if (event.target.value.match(pattern) && event.target.value.split(/\n/).length === +form.wallsHeightAndWidth.value.split(/\s/)[1]
+        && event.target.value.split(/\n/).reduce(reducer, 0) === +form.wallsHeightAndWidth.value.split(/\s/)[0]) {
+          event.target.style.border = '3px solid rgb(2, 39, 2)';
+          formValidation.wallsShapeMatrixChecker = true;
+        } else {
+          event.target.style.border = '3px solid red';
+          formValidation.wallsShapeMatrixChecker = false;
+        }
+      break;
+      default:
+        if (!event.target.value.match(pattern)) {
+           event.target.style.border = '3px solid red';
+           checker === 'countOfBrickSortsChecker' ? formValidation.countOfBrickSortsChecker = false : formValidation.wallsHeightAndWidthChecker = false;
+          } else {
+            event.target.style.border = '3px solid rgb(2, 39, 2)';
+            checker === 'countOfBrickSortsChecker' ? formValidation.countOfBrickSortsChecker = true : formValidation.wallsHeightAndWidthChecker = true;
+        }
+    }
+  }
+function reducer(acumulator, currentValue) {
+    if (currentValue.length > acumulator) acumulator = currentValue.length;
+    return  acumulator;
+}
+
+  function disabledButtonChecker() {
+    if (formValidation.listOfbricksChecker && formValidation.wallsShapeMatrixChecker && formValidation.wallsHeightAndWidthChecker &&
+    formValidation.countOfBrickSortsChecker) {
+      form.button.disabled = false;
+    } else {
+      form.button.disabled = true;
+    }
+  }
+
+  function onSubmit() {
+    form.button.disabled = true;
+    const arrListOfBricks = form.listOfBricks.value.split(/\n/).map(element => {
+      return element.split(/\s/);
+    })
+
+  let formResult = {
+      wallsHeightAndWidth: form.wallsHeightAndWidth.value.split(/\s/),
+      wallsShapeMatrix: form.wallsShapeMatrix.value.split(/\n/),
+      countOfBrickSorts: form.countOfBrickSorts.value,
+      listOfBricks: arrListOfBricks
+  }
+    getElementAccess('.answerChecker').style.display = 'block';
+    postData(formResult).then(data => {
+    form.answer.style.border = '3px solid rgb(2, 39, 2)';
+    form.answer.value = data.result;
+
+    const timeout = setTimeout(() => {
+      formResult = {
+        wallsHeightAndWidth: null,
+        wallsShapeMatrix: null,
+        countOfBrickSorts: null,
+        listOfBricks: null
+      };
+      getElementAccess('.answerChecker').style.display = 'none';
+      formValidation = {
+        listOfbricksChecker: false,
+        wallsShapeMatrixChecker: false,
+        wallsHeightAndWidthChecker: false,
+        countOfBrickSortsChecker: false,
+      };
+      clearTimeout(timeout);
+    }, 7000)
+  });
+  form.reset();
+}
+
+  async function postData(formResult) {
+    const url = "http://localhost:3000";
+    const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    cache: 'no-cache',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    referrerPolicy: 'no-referrer',
+    body: JSON.stringify(formResult)
+  });
+  return response.json();
+}
+</script>
+
+</html>
